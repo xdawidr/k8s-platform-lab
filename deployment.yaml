@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-api-deployment
+  labels:
+    app: bank-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bank-api
+  template:
+    metadata:
+      labels:
+        app: bank-api
+    spec:
+      containers:
+      - name: bank-api-container
+        image: europe-central2-docker.pkg.dev/bank-devops-lab/bank-apps-repo/bank-api-service:v1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
