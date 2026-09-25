@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bank-api-config
+data:
+  ENV: "production"
+  APP_PORT: "8080"
+  bank-config.json: |
+    {
+      "bank_code": "BNK-PL-WARSAW",
+      "log_level": "INFO",
+      "transaction_rate_limit": 500,
+      "features": {
+        "instant_transfers": true
+      }
+    }

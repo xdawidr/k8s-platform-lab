@@ -6,6 +6,11 @@ metadata:
     app: bank-api
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: bank-api
@@ -14,23 +19,34 @@ spec:
       labels:
         app: bank-api
     spec:
-      replicas: 2
-      strategy:
-        type: RollingUpdate
-        rollingUpdate:
-          maxSurge: 1
-          maxUnavailable: 0
-      selector:
-        matchLabels:
-      app: bank-api    
       containers:
       - name: bank-api-container
         image: europe-central2-docker.pkg.dev/bank-devops-lab/bank-apps-repo/bank-api-service:v1
         ports:
         - containerPort: 8080
         env:
+        # Zmienne z ConfigMap
         - name: ENV
-          value: production
+          valueFrom:
+            configMapKeyRef:
+              name: bank-api-config
+              key: ENV
+        - name: APP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: bank-api-config
+              key: APP_PORT
+        # Zmienna z Secret
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bank-api-secret
+              key: VAULT_TOKEN
+        # Montowanie pliku w systemie kontenera
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/bank
+          readOnly: true
         resources:
           requests:
             memory: "128Mi"
@@ -50,3 +66,10 @@ spec:
             port: 8080
           initialDelaySeconds: 2
           periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: bank-api-config
+          items:
+          - key: bank-config.json
+            path: config.json
