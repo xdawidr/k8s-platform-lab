@@ -25,7 +25,7 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 - Recreated the cluster under a new name, `k8s-platform-lab` (previously `bank-cluster`).
 - Moved app config out of the image into a ConfigMap (`bank-api-config`).
   The app reads it two ways: as env vars and as a file mounted at `/etc/bank/config.json`.
-- Added a Secret (`bank-api-secret`) with DB credentials and injected it into the pod.
+- Added a Secret (`bank-api-secret`) and injected `VAULT_TOKEN` into the pod as an env var.
 - Used `kubectl rollout restart` to pick up config changes without downtime.
 
 **What surprised me**
