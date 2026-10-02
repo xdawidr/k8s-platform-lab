@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bank-api-ingress
+  annotations:
+    networking.gke.io/managed-certificates: bank-api-cert
+    networking.gke.io/v1beta1.FrontendConfig: bank-frontend-config
+spec:
+  rules:
+  - host: bank.testnginxraz2.online
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bank-api-service
+            port:
+              number: 80

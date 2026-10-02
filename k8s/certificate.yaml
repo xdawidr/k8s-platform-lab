@@ -1,0 +1,7 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: bank-api-cert
+spec:
+  domains:
+    - bank.testnginxraz2.online
