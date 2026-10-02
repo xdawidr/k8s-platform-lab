@@ -89,3 +89,34 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 
 **Next**
 - GKE Autopilot cluster and Artifact Registry: push the image and deploy it.
+
+---
+
+## 2026-10-02: Ingress, managed TLS, and HTTPS redirect
+
+**Done**
+- Replaced the L4 LoadBalancer Service with GKE Ingress (L7 external Application Load Balancer).
+- Pointed `bank.testnginxraz2.online` to the load balancer IP in Cloudflare
+  (DNS only, proxy disabled, so Google can verify the domain for the certificate).
+- Added a Google-managed certificate (`ManagedCertificate: bank-api-cert`),
+  so Google handles issuing and renewing it.
+- Added a `FrontendConfig` (`bank-frontend-config`) with `redirectToHttps` to force HTTPS.
+- Checked the result with `curl -IL`: port 80 returns `301` to HTTPS,
+  then `200 OK` over HTTP/2 and TLS 1.3.
+
+**What surprised me**
+- - The Service is only `ClusterIP`, yet the load balancer reaches it. GKE automatically
+  added the `cloud.google.com/neg` annotation (container-native load balancing),
+  so traffic goes straight to Pod IPs instead of through the nodes.
+  `neg-status` also showed endpoints in two zones (`europe-central2-b` and `-c`),
+  so my two replicas run in different zones.
+
+**Problems**
+- After creating the `FrontendConfig`, port 80 still returned `200 OK` instead of a redirect.
+  `kubectl describe ingress` showed why: the resource does nothing on its own,
+  the Ingress needs the `networking.gke.io/v1beta1.FrontendConfig` annotation to use it.
+  After adding it, the 301 redirect started working.
+
+**Next**
+- Persistent storage: PVC and StorageClass backed by GCP Persistent Disk.
+- Deploy PostgreSQL and check that data survives Pod restarts.
