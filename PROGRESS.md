@@ -105,7 +105,10 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
   then `200 OK` over HTTP/2 and TLS 1.3.
 
 **What surprised me**
-- - The Service is only `ClusterIP`, yet the load balancer reaches it. GKE automatically
+- The managed certificate took about 40–50 minutes to provision. While it was
+  still `Provisioning`, `curl` over HTTPS failed with `unexpected eof while reading`,
+  because the load balancer had no certificate to complete the TLS handshake with.
+- The Service is only `ClusterIP`, yet the load balancer reaches it. GKE automatically
   added the `cloud.google.com/neg` annotation (container-native load balancing),
   so traffic goes straight to Pod IPs instead of through the nodes.
   `neg-status` also showed endpoints in two zones (`europe-central2-b` and `-c`),
@@ -120,3 +123,5 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 **Next**
 - Persistent storage: PVC and StorageClass backed by GCP Persistent Disk.
 - Deploy PostgreSQL and check that data survives Pod restarts.
+
+---
