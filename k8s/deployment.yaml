@@ -21,11 +21,10 @@ spec:
     spec:
       containers:
       - name: bank-api-container
-        image: europe-central2-docker.pkg.dev/bank-devops-lab/bank-apps-repo/bank-api-service:v1
+        image: europe-central2-docker.pkg.dev/bank-devops-lab/bank-apps-repo/bank-api-service:v2
         ports:
         - containerPort: 8080
         env:
-        # Zmienne z ConfigMap
         - name: ENV
           valueFrom:
             configMapKeyRef:
@@ -36,13 +35,21 @@ spec:
             configMapKeyRef:
               name: bank-api-config
               key: APP_PORT
-        # Zmienna z Secret
         - name: VAULT_TOKEN
           valueFrom:
             secretKeyRef:
               name: bank-api-secret
               key: VAULT_TOKEN
-        # Montowanie pliku w systemie kontenera
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: bank-api-config
+              key: DB_HOST
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bank-api-secret
+              key: DB_PASSWORD
         volumeMounts:
         - name: config-volume
           mountPath: /etc/bank
