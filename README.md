@@ -47,6 +47,7 @@ flowchart TB
     dbsvc --> db
     db --> pvc
     pvc -. "backed by" .-> disk
+```
 
 ## Repository structure
 
