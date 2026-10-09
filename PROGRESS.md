@@ -5,6 +5,30 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 
 ---
 
+## 2026-10-09: PostgreSQL persistence, Chaos test, and API v2
+
+**Done**
+- Deployed PostgreSQL as a `StatefulSet` (`postgres-0`) backed by a `PersistentVolumeClaim` (PVC) on GCP Persistent Disk.
+- Added internal ClusterIP Service for Postgres on port 5432 and seeded the `accounts` table (`Joe Doe`, 10,000 balance).
+- Performed a Chaos Engineering test: deleted `postgres-0` with `kubectl delete pod`. The StatefulSet recreated the Pod with the exact same name, re-attached the PVC, and SQL queries confirmed zero data loss.
+- Implemented `/accounts` endpoint in `app/app.py` using `psycopg2-binary` to fetch records from the database.
+- Built `bank-api:v2` locally and pushed it to GCP Artifact Registry (`europe-central2`).
+- Updated `deployment.yaml` with the `:v2` image tag and ran a zero-downtime rolling update (`kubectl rollout status`).
+- Verified end-to-end flow: `curl -i https://bank.testnginxraz2.online/accounts` returned `200 OK` with JSON account data.
+
+**What surprised me**
+- How predictable `StatefulSet` pod recovery is compared to `Deployment`. When the DB pod was killed, it didn't get a random hash name—it came right back as `postgres-0` and immediately re-bound to the existing storage volume.
+- The entire path worked seamlessly through our previously built L7 Ingress: external HTTPS request -> TLS termination -> ClusterIP -> API v2 pod -> CoreDNS resolving `postgres` -> DB on persistent disk.
+
+**Problems**
+- Hitting `/accounts` initially returned a `404 Not Found` from Gunicorn. Looking at `app.py` made it obvious: version 1 only had routes for `/` and `/health`, with no DB drivers installed.
+- `docker push` failed with `Unauthenticated request` on Artifact Registry. Local Docker needed GCP credentials configured via `gcloud auth configure-docker europe-central2-docker.pkg.dev` before it could upload layers.
+
+**Next**
+- Sprint 5A: Multi-tenancy and network security (`NetworkPolicy` to isolate PostgreSQL so only `bank-api` pods can reach port 5432).
+
+---
+
 ## 2026-10-02: Ingress, managed TLS, and HTTPS redirect
 
 **Done**
