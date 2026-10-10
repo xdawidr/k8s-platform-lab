@@ -5,6 +5,24 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 
 ---
 
+#### 2026-10-10: Namespaces and NetworkPolicies (Sprint 5A)
+**Done**
+* Created two separate namespaces: `bank-dev` and `bank-prod` to start isolating environments.
+* Added a `default-deny-all` NetworkPolicy in `bank-prod` to lock down all incoming and outgoing traffic.
+* Confirmed the flat network issue: created an attacker pod in `bank-dev` and easily connected to `postgres.default:5432` (`open`).
+* Added `postgres-allow-api` NetworkPolicy in `default` namespace so only pods with the label `app: bank-api` can access port 5432.
+* Verified the database policy: the real API via public Ingress still works (200 OK), but the attacker pod in `bank-dev` gets a `Connection timed out` (packets are silently dropped).
+
+**What surprised me / What broke**
+* I confused Service port with container port: `bank-api-service` listens on port 80 and forwards to container port 8080. When I tried hitting port 8080 on the Service, the request timed out.
+* Defense in Depth lesson: protecting only the database is not enough. I proved this by running `attacker-curl` in `bank-dev` against `bank-api-service.default:80/accounts`. The API returned Joe Doe's data without issues because `bank-api` had no firewall in front of it.
+
+**Next**
+* Create a NetworkPolicy for `bank-api` so it only accepts traffic from the Ingress controller.
+* Move our database and API workloads from `default` into `bank-prod`.
+
+---
+
 ## 2026-10-09: PostgreSQL persistence, Chaos test, and API v2
 
 **Done**
