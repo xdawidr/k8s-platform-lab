@@ -5,7 +5,24 @@ The cluster only runs while I'm working on it and gets deleted afterwards to kee
 
 ---
 
-#### 2026-10-10: Namespaces and NetworkPolicies (Sprint 5A)
+#### 2026-10-11: Securing bank-prod and cleaning up default
+
+**Done**
+* Locked down `bank-prod` using NetworkPolicies: `bank-api` now only takes traffic from the GCP Ingress and can only talk to PostgreSQL (port 5432) and DNS (port 53).
+* Cleaned up the `default` namespace: deleted old deployments, statefulsets, and services to free up RAM and CPU in the cluster.
+* Deleted the old 10Gi PVC in `default`—Google Cloud automatically deleted the underlying disk, so we won't get billed for unused storage.
+* Left `service/kubernetes` untouched because it is the internal endpoint for the cluster control plane.
+* Verified the live API with `curl`: fetching `/accounts` from the internet still returns Joe Doe's data without issues.
+
+**What broke / Troubleshooting**
+* DNS resolution broke: `bank-api` couldn't reach the database because my policy only opened TCP on port 53 (DNS mostly uses UDP), and a strict `namespaceSelector` blocked the node's local DNS cache. Dropping the selector and adding UDP fixed it.
+
+**Next**
+* Package all our raw manifests into a reusable Helm chart with separate values for dev and prod.
+
+---
+
+#### 2026-10-10: Namespaces and NetworkPolicies
 **Done**
 * Created two separate namespaces: `bank-dev` and `bank-prod` to start isolating environments.
 * Added a `default-deny-all` NetworkPolicy in `bank-prod` to lock down all incoming and outgoing traffic.
